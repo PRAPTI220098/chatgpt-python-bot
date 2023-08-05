@@ -16,6 +16,13 @@ PN="\033[1;35m" #PINK
 # Replace 'YOUR_BOT_TOKEN' with your actual Telegram bot token
 bot = telebot.TeleBot('6222084445:AAEWvWpWiY7Yec3Ne0HnxauZjM4B9ymR1nE')
 
+# Replace 'your_proxy_address' with the IP address or domain of your proxy server,
+# and 'port' with the corresponding port number
+proxy = {
+    'http': 'http://103.206.208.135:55443',
+    'https': 'http://207.180.252.117:2222'
+}
+
 custom_headers = {
     'Host': 'gptzaid.zaidbot.repl.co',
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36',
@@ -23,7 +30,7 @@ custom_headers = {
 
 def chat_with_gpt(message_text):
     api_url = f'https://gptzaid.zaidbot.repl.co/1/text={message_text}'
-    response = requests.get(api_url, headers=custom_headers).text
+    response = requests.get(api_url, headers=custom_headers, proxies=proxy).text
     return response
 
 @bot.message_handler(commands=['start'])
@@ -49,32 +56,15 @@ def handle_message(message):
         return
 
     # Display who sends the message and the message itself in the terminal
-    print(f"{Y}{message.from_user.first_name}: {C}{user_input}\n")
+    print(f"{Y}{message.from_user.first_name}: {C}{user_input}\n\n")
 
     # Send the 🤔 thinking emoji as part of the response message
     response_text = "🤔 " + chat_with_gpt(user_input)
 
-    # Remove the 🤔 thinking emoji from the response_text
-    response_text = response_text.replace("🤔", "").strip()
-
-    # Add like and dislike buttons to the answer
-    reply_markup = types.InlineKeyboardMarkup(row_width=2)
-    like_button = types.InlineKeyboardButton(text='👍 Like', callback_data='like')
-    dislike_button = types.InlineKeyboardButton(text='👎 Dislike', callback_data='dislike')
-    reply_markup.add(like_button, dislike_button)
-
-    # Send the response with the like and dislike buttons
-    bot.send_message(message.chat.id, response_text, reply_markup=reply_markup)
+    bot.send_message(message.chat.id, response_text)
 
     # Display the bot's response in the terminal
     print(f"{Y}Answer: {C}{response_text}")
-
-@bot.callback_query_handler(func=lambda call: True)
-def handle_callback(call):
-    if call.data == 'like':
-        bot.answer_callback_query(call.id, "You liked the answer. Thank you!")
-    elif call.data == 'dislike':
-        bot.answer_callback_query(call.id, "You disliked the answer. We'll improve!")
 
 def main():
     print(f"{PN}ChatGPT Telegram Bot is running...\n")
